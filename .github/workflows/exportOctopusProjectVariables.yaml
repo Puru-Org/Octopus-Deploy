@@ -110,4 +110,22 @@ jobs:
         $variablesResponse | ConvertTo-Json -Depth 9 | Out-File -FilePath $outputFilePath
 
         Write-Host "Variables data has been exported and saved to $outputFilePath"
+    - name: Check for changes
+      id: check_changes
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "there are new changes";
+          # git config --global user.name 'Github Action'
+          # git config --global user.email 'puru7791@users.noreply.github.com'
+          #git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.GIT
+          #git checkout "${GITHUB_REF:11}"
+          git checkout -b "GH-Auto"
+          git add -A
+          git commit -m "Auto-generated: Added extracted Octopus variables file"
+          #git push origin "${GITHUB_REF:11}"
+          git push origin GH-Auto
+        else
+          echo "Your branch is up to date.";
+        fi
 
