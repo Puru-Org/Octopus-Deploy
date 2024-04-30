@@ -1,0 +1,17 @@
+name: Test
+on:
+  # push:
+  #   branches: 
+  #     - main
+  workflow_call:
+  
+jobs:
+  export-project-variable:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Test
+      run: echo ${GITHUB_REF##*/}
