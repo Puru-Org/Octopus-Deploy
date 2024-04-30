@@ -38,13 +38,13 @@ jobs:
         $apiKey = "$env:OCTOPUS_API_KEY"
         $projectName = "${{ inputs.ProjectName }}"
         $spaceName = "Default"
-        
+        #dirName = "Octopus"
         ## Check if file exists or not
-        if (!(Test-Path -Path "$projectName" -PathType Container)) {
-          $dir = New-Item -Path "$projectName" -ItemType "directory"
+        if (!(Test-Path -Path "$dirName" -PathType Container)) {
+          $dir = New-Item -Path "$dirName" -ItemType "directory"
         }
         else {
-          Write-Host "$projectName directory already exists, proceeding..."
+          Write-Host "$dirName directory already exists, proceeding..."
         }
         
         # Define the output JSON file path
@@ -106,7 +106,7 @@ jobs:
         }
 
         # Convert response to JSON and save to file
-        $variablesResponse | ConvertTo-Json -Depth 9 | Out-File -FilePath $outputFilePath
+        $variablesResponse | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFilePath
 
         Write-Host "Variables data has been exported and saved to $outputFilePath"
     - name: Check for changes
