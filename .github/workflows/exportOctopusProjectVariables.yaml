@@ -114,43 +114,47 @@ jobs:
         $variablesData | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFilePath
 
         Write-Host "Variables data has been exported and saved to $outputFilePath"
-    - name: Check for changes
-      id: check_changes
-      # env: 
-      #   GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
-      run: |
-        if ((git status --porcelain) -ne $null) {
-          Write-Host "there are new changes"
+    - name: get content of exported file
+      run: | 
+        cat ./Octopus-variables/$projectName-vars.json
+        
+    # - name: Check for changes
+    #   id: check_changes
+    #   # env: 
+    #   #   GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+    #   run: |
+    #     if ((git status --porcelain) -ne $null) {
+    #       Write-Host "there are new changes"
 
-          git config --global user.name 'Github Action'
-          git config --global user.email 'actions@users.noreply.github.com'
-          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git pull origin/qa qa
-          git checkout -b qa
-          git add -A
-          git commit -m "Auto-generated: Added extracted Octopus variables file"
-          git push origin qa
+    #       git config --global user.name 'Github Action'
+    #       git config --global user.email 'actions@users.noreply.github.com'
+    #       git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+    #       git pull origin/qa qa
+    #       git checkout -b qa
+    #       git add -A
+    #       git commit -m "Auto-generated: Added extracted Octopus variables file"
+    #       git push origin qa
 
           
-          # git config --global user.name 'Github Action'
-          # git config --global user.email 'actions@users.noreply.github.com'
-          # git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          # git pull
-          # git checkout -b qa
-          # git add -A
-          # git commit -m "Auto-generated: Added extracted Octopus variables file"
-          # git pull origin qa
-          # git push origin HEAD:qa
+    #       # git config --global user.name 'Github Action'
+    #       # git config --global user.email 'actions@users.noreply.github.com'
+    #       # git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+    #       # git pull
+    #       # git checkout -b qa
+    #       # git add -A
+    #       # git commit -m "Auto-generated: Added extracted Octopus variables file"
+    #       # git pull origin qa
+    #       # git push origin HEAD:qa
 
-          #git pull --rebase
-          #git pull origin/develop develop
-          #git push origin HEAD:develop
-          #git push origin "${GITHUB_REF:11}"
-          #git push origin GH-Auto
-        }
-        else {
-          Write-Host "Your branch is up to date."
-        }
+    #       #git pull --rebase
+    #       #git pull origin/develop develop
+    #       #git push origin HEAD:develop
+    #       #git push origin "${GITHUB_REF:11}"
+    #       #git push origin GH-Auto
+    #     }
+    #     else {
+    #       Write-Host "Your branch is up to date."
+    #     }
     - name: List files and Dir's
       run: |
         Get-ChildItem -Force .\
