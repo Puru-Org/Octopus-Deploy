@@ -20,6 +20,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+    - name: Pull the changes
+      run: git pull origin develop
 
     - name: PowerShell script to export project variables
       shell: pwsh
