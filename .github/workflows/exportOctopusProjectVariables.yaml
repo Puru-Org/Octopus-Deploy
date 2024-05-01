@@ -38,13 +38,13 @@ jobs:
         $apiKey = "$env:OCTOPUS_API_KEY"
         $projectName = "${{ inputs.ProjectName }}"
         $spaceName = "Default"
-        #dirName = "Octopus"
+        $dirName = "Octopus-variables"
         ## Check if file exists or not
-        if (!(Test-Path -Path "$projectName" -PathType Container)) {
-          $dir = New-Item -Path "$projectName" -ItemType "directory"
+        if (!(Test-Path -Path "$dirName" -PathType Container)) {
+          $dir = New-Item -Path "$dirName" -ItemType "directory"
         }
         else {
-          Write-Host "$projectName directory already exists, proceeding..."
+          Write-Host "$dirName directory already exists, proceeding..."
         }
        
         # Define the output JSON file path
