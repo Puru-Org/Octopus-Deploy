@@ -116,8 +116,8 @@ jobs:
         Write-Host "Variables data has been exported and saved to $outputFilePath"
     - name: get content of exported file
       run: | 
-        cat ./Octopus-variables/$projectName-vars.json
-        
+        cat ./Octopus-variables/${{ inputs.ProjectName }}-vars.json
+
     # - name: Check for changes
     #   id: check_changes
     #   # env: 
