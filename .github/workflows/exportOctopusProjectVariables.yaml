@@ -130,7 +130,7 @@ jobs:
           #git checkout -b "GH-Auto"
           git add -A
           git commit -m "Auto-generated: Added extracted Octopus variables file"
-          git pull
+          git pull --rebase
           #git pull origin/develop develop
           git push origin HEAD:develop
           #git push origin "${GITHUB_REF:11}"
