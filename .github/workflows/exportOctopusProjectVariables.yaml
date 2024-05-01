@@ -20,8 +20,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Pull the changes
-      run: git pull origin develop
 
     - name: PowerShell script to export project variables
       shell: pwsh
@@ -122,17 +120,18 @@ jobs:
       #   GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
       run: |
         if ((git status --porcelain) -ne $null) {
-          Write-Host "there are new changes";
+          Write-Host "there are new changes"
+
           git config --global user.name 'Github Action'
           git config --global user.email 'actions@users.noreply.github.com'
           
           #git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          #git checkout "${GITHUB_REF:11}"
-          #git checkout -b "GH-Auto"
+          git checkout develop
+          git pull 
           git add -A
           git commit -m "Auto-generated: Added extracted Octopus variables file"
-          git pull --rebase
+          #git pull --rebase
           #git pull origin/develop develop
           git push origin HEAD:develop
           #git push origin "${GITHUB_REF:11}"
