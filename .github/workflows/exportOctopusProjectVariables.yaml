@@ -109,9 +109,9 @@ jobs:
             Write-Host "No data returned from the URL $variablesResponse."
             exit
         }
-
+        $variablesData = $variablesResponse | Select-Object -ExpandProperty Variables | Select-Object Variables, ScopeValues
         # Convert response to JSON and save to file
-        $variablesResponse | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFilePath
+        $variablesData | ConvertTo-Json -Depth 10 | Out-File -FilePath $outputFilePath
 
         Write-Host "Variables data has been exported and saved to $outputFilePath"
     - name: Check for changes
