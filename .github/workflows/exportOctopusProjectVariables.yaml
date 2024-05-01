@@ -120,7 +120,7 @@ jobs:
       #   GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
       run: |
         if ((git status --porcelain) -ne $null) {
-          echo "there are new changes";
+          Write-Host "there are new changes";
           git config --global user.name 'Github Action'
           git config --global user.email 'actions@users.noreply.github.com'
           #git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git
@@ -134,6 +134,8 @@ jobs:
           #git push origin GH-Auto
         }
         else {
-          echo "Your branch is up to date."
+          Write-Host "Your branch is up to date."
         }
-
+    - name: List files and Dir's
+      run: |
+        Get-ChildItem -Force .\
