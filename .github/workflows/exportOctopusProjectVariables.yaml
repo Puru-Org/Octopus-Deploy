@@ -129,7 +129,7 @@ jobs:
           git pull 
           git add -A
           git commit -m "Auto-generated: Added extracted Octopus variables file"
-          git push -u origin development
+          git push origin HEAD:development
 
           #git pull --rebase
           #git pull origin/develop develop
