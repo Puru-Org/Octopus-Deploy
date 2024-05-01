@@ -123,6 +123,7 @@ jobs:
           Write-Host "there are new changes";
           git config --global user.name 'Github Action'
           git config --global user.email 'actions@users.noreply.github.com'
+          git pull origin/develop develop
           #git remote set-url origin https://github.com/${GITHUB_REPOSITORY}.git
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           #git checkout "${GITHUB_REF:11}"
@@ -139,3 +140,5 @@ jobs:
     - name: List files and Dir's
       run: |
         Get-ChildItem -Force .\
+        Remove-Item -Force -Recurse .\*
+
