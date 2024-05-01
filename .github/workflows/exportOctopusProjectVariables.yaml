@@ -49,11 +49,11 @@ jobs:
        
         # Define the output JSON file path
         $outputFilePath = "$dir/$projectName-vars.json"
-        $path = "$dir"
-        $acl = Get-Acl $path
-        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users","FullControl","Allow")
-        $acl.SetAccessRule($rule)
-        Set-Acl -Path $path -AclObject $acl
+        # $path = "$dir"
+        # $acl = Get-Acl $path
+        # $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users","FullControl","Allow")
+        # $acl.SetAccessRule($rule)
+        # Set-Acl -Path $path -AclObject $acl
 
         # Function to make REST API requests
         function Invoke-OctopusApi {
