@@ -126,9 +126,9 @@ jobs:
           git config --global user.email 'actions@users.noreply.github.com'
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git checkout -b develop origin/develop
-          git pull 
           git add -A
           git commit -m "Auto-generated: Added extracted Octopus variables file"
+          git pull origin develop
           git push origin HEAD:develop
 
           #git pull --rebase
