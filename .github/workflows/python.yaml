@@ -25,9 +25,11 @@ jobs:
       shell: python
       run: |
         import json
+        import requests
         def extract_and_add_variable(source_json, dest_json, variable_names):
-            with open(source_json, 'r') as f:
-                source_data = json.load(f)
+            # with open(source_json, 'r') as f:
+            #     source_data = json.load(f)
+            source_data = requests.get(source_json).json()
 
             with open(dest_json, 'r') as f:
                 dest_data = json.load(f)
