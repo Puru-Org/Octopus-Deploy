@@ -63,9 +63,12 @@ jobs:
         
             # Call function to extract and add variables to destination JSON
             if data_entry.get("copy_all"):
-                with open(source_json, 'r') as f:
-                    all_variables = json.load(f)["Variables"]
-                variable_names.extend(variable["Name"] for variable in all_variables)
+              all_variables = requests.get(source_json).json()
+              variable_names.extend(variable["Name"] for variable in all_variables)
+            # if data_entry.get("copy_all"):
+            #     with open(source_json, 'r') as f:
+            #         all_variables = json.load(f)["Variables"]
+            #     variable_names.extend(variable["Name"] for variable in all_variables)
         
             extract_and_add_variable(source_json.strip(), dest_json, variable_names)
       
