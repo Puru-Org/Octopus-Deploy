@@ -42,7 +42,7 @@ jobs:
                 else:
                     print("Adding the Variable property block to the destination JSON file")
                     extracted_data = []
-                    for variable in source_data["Variables"]:
+                    for variable in source_data:
                         if variable.get("Name") == variable_name:
                             extracted_data.append(variable)
         
