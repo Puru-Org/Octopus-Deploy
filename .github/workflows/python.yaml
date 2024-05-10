@@ -24,7 +24,7 @@ jobs:
     - name: Run python script to extract global variables to project vars
       shell: python
       run: |
-        import json
+        #import json
         import requests
         
         def extract_and_add_variable(source_json, dest_json, variable_names):
