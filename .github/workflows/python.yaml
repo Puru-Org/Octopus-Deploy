@@ -37,7 +37,7 @@ jobs:
             with open(project_variable_json, 'r') as f:
                 dest_data = json.load(f)
         
-            source_environment_list = source_data["ScopeValues"]["Environments"]
+            #source_environment_list = source_data["ScopeValues"]["Environments"]
             dest_environment_list = dest_data["ScopeValues"]["Environments"]
         
             # Creating a dictionary to store environment names with their corresponding IDs
