@@ -37,29 +37,32 @@ jobs:
             with open(project_variable_json, 'r') as f:
                 dest_data = json.load(f)
         
+            source_environment_list = source_data["ScopeValues"]["Environments"]
+            dest_environment_list = dest_data["ScopeValues"]["Environments"]
+        
+            # Creating a dictionary to store environment names with their corresponding IDs
+            dest_environment_dict = {env["Id"]: env["Name"] for env in dest_environment_list}
+        
             for variable_name in variable_names:
                 existing_variables = [variable for variable in dest_data["Variables"] if variable["Name"] == variable_name]
                 if existing_variables:
                     for existing_variable in existing_variables:
                         existing_variable_value = existing_variable["Value"]
                         existing_variable_environment_ids = existing_variable["Scope"]["Environment"]
-                        existing_variable_environment_names = [next((env["Name"] for env in dest_data["ScopeValues"]["Environments"] if env["Id"] == env_id), None) for env_id in existing_variable_environment_ids]
+                        existing_variable_environment_names = [dest_environment_dict[env_id] for env_id in existing_variable_environment_ids]
                         existing_variable_environment_names = ", ".join(existing_variable_environment_names)
                         print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file with Value: {existing_variable_value} and Environments: {existing_variable_environment_names}")
-                        # existing_variable_environment_id = existing_variable["Scope"]["Environment"][0]
-                        # existing_variable_environment_name = next((env["Name"] for env in dest_data["ScopeValues"]["Environments"] if env["Id"] == existing_variable_environment_id), None)
-                        # existing_variable_environment_names = ", ".join(existing_variable_environment_names)
-                        # print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file with Value: {existing_variable_value} and Environment: {existing_variable_environment_name}")
-                        break
-                    continue    
-                else:
-                    print(f"Adding the '{variable_name}' Variable property block to the destination '{project_variable_json}' file")
-                    extracted_data = []
-                    for variable in source_data:
-                        if variable.get("Name") == variable_name:
-                            extracted_data.append(variable)
+                        break  # Stop the loop when the matching environment is found
         
-                    dest_data["Variables"].extend(extracted_data)
+                    continue
+                
+                print("Adding the Variable property block to the destination JSON file")
+                extracted_data = []
+                for variable in source_data["Variables"]:
+                    if variable.get("Name") == variable_name:
+                        extracted_data.append(variable)
+        
+                dest_data["Variables"].extend(extracted_data)
         
             with open(project_variable_json, 'w') as f:
                 json.dump(dest_data, f, indent=2)
@@ -72,7 +75,7 @@ jobs:
         for data_entry in source_data:
             source_json_url = data_entry["global_variable_json_url"]
             variable_names = data_entry["variable_names"]
-            project_variable_json = "${{ inputs.project_variable_json }}"  # destination Project JSON file 
+            project_variable_json = "${{ inputs.project_variable_json }}"  # Assuming same destination JSON file for all sources
         
             # Call function to extract and add variables to destination JSON
             if data_entry.get("copy_all"):
@@ -80,6 +83,7 @@ jobs:
                 variable_names.extend(variable["Name"] for variable in all_variables)
         
             extract_and_add_variable(source_json_url.strip(), project_variable_json, variable_names)
+      
       
       
       
