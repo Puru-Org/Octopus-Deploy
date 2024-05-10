@@ -63,13 +63,13 @@ jobs:
         
         # Process each source data entry
         for data_entry in source_data:
-            global_ref_json = data_entry["global_ref_json"]
+            global_ref_json = data_entry["global_variable_json_url"]
             variable_names = data_entry["variable_names"]
             project_variable_json = "${{ inputs.project_variable_json }}"  # Assuming same destination JSON file for all sources
         
             # Call function to extract and add variables to destination JSON
             if data_entry.get("copy_all"):
-                all_variables = requests.get(global_ref_json).json()
+                all_variables = requests.get(global_variable_json_url).json()
                 variable_names.extend(variable["Name"] for variable in all_variables)
         
             extract_and_add_variable(global_ref_json.strip(), project_variable_json, variable_names)
