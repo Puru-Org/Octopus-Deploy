@@ -1,5 +1,4 @@
-{
-  "Variables": [
+[
   {
     "Id": "1d425712-b903-b48c-021e-8d90f4db875a",
     "Name": "Name2",
@@ -24,7 +23,7 @@
   },
   {
     "Id": "92a0cfa6-f235-d604-2989-f5228e488fe8",
-    "Name": "AppSettings.var1",
+    "Name": "AppSettings.var2",
     "Value": "value1",
     "Description": null,
     "Scope": {
@@ -39,7 +38,7 @@
   },
   {
     "Id": "955613e2-7a6c-9f13-5be5-fcf74a36b3b0",
-    "Name": "AppSettings.var1",
+    "Name": "AppSettings.var2",
     "Value": "val2",
     "Description": null,
     "Scope": {
@@ -54,7 +53,7 @@
   },
   {
     "Id": "356ebf83-9c15-0e56-84e7-b4dacf10534a",
-    "Name": "AppSettings.var1",
+    "Name": "AppSettings.var2",
     "Value": "val3",
     "Description": null,
     "Scope": {
@@ -69,7 +68,7 @@
   },
   {
     "Id": "3bf3081e-754d-063a-8ae6-892ed98eee7f",
-    "Name": "AppSettings.var1",
+    "Name": "AppSettings.var2",
     "Value": "val4",
     "Description": null,
     "Scope": {
@@ -84,7 +83,7 @@
   },
   {
     "Id": "8fb3bd71-4d8c-9828-f595-18b487c7c4df",
-    "Name": "AppSettings.var1",
+    "Name": "AppSettings.var2",
     "Value": "val5",
     "Description": null,
     "Scope": {
@@ -99,7 +98,7 @@
   },
   {
     "Id": "1fcddbc2-a55a-5e7b-5bb4-c1fc7b271c71",
-    "Name": "AppSettings.Active",
+    "Name": "AppSettings.Act",
     "Value": "1",
     "Description": null,
     "Scope": {},
@@ -110,7 +109,7 @@
   },
   {
     "Id": "241889f3-c6d7-ee66-bd58-45bbf9834bf0",
-    "Name": "AppSettings.clientID",
+    "Name": "AppSettings.clientSecret",
     "Value": "cl1",
     "Description": null,
     "Scope": {
@@ -125,7 +124,7 @@
   },
   {
     "Id": "e35182be-702b-a975-7651-23a26402e57d",
-    "Name": "AppSettings.clientID",
+    "Name": "AppSettings.clientSecret",
     "Value": "cl2",
     "Description": null,
     "Scope": {
@@ -140,7 +139,7 @@
   },
   {
     "Id": "97c3e003-18ce-ecd9-339f-dbccc8f20f6a",
-    "Name": "AppSettings.clientID",
+    "Name": "AppSettings.clientSecret",
     "Value": "cl3",
     "Description": null,
     "Scope": {
@@ -155,7 +154,7 @@
   },
   {
     "Id": "972584db-21db-0d41-14b2-20c050dd3cc0",
-    "Name": "AppSettings.clientID",
+    "Name": "AppSettings.clientSecret",
     "Value": "cl4",
     "Description": null,
     "Scope": {
@@ -170,7 +169,7 @@
   },
   {
     "Id": "49cb7b72-e41f-6081-e785-531159636ce3",
-    "Name": "AppSettings.clientID",
+    "Name": "AppSettings.clientSecret",
     "Value": "cl5",
     "Description": null,
     "Scope": {
@@ -259,4 +258,4 @@
     "IsSensitive": false
   }
 ]
-}
+
