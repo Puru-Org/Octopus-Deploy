@@ -52,7 +52,7 @@ jobs:
                         existing_variable_environment_names = [dest_environment_dict[env_id] for env_id in existing_variable_environment_ids]
                         existing_variable_environment_names = ", ".join(existing_variable_environment_names)
                         print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file with Value: {existing_variable_value} and Environments: {existing_variable_environment_names}")
-                        break  # Stop the loop when the matching environment is found
+                        #break  # Stop the loop when the matching environment is found
         
                     continue
                 
