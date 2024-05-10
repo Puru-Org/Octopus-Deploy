@@ -5,11 +5,11 @@ on:
   #     - main
   workflow_call:
     inputs: 
-      source_data: 
+      global_ref_json: 
         type: string
         required: true
         description: 'Octopus VariableSet Name'
-      dest_json:
+      project_variable_json:
         type: string
         required: true
         #default: ""
@@ -27,25 +27,26 @@ jobs:
         import json
         import requests
         
-        def extract_and_add_variable(source_json, dest_json, variable_names):
-            if source_json.startswith("http"):
-                source_data = requests.get(source_json).json()
+        def extract_and_add_variable(global_ref_json, project_variable_json, variable_names):
+            if global_ref_json.startswith("http"):
+                source_data = requests.get(global_ref_json).json()
             else:
-                with open(source_json, 'r') as f:
+                with open(global_ref_json, 'r') as f:
                     source_data = json.load(f)
         
-            with open(dest_json, 'r') as f:
+            with open(project_variable_json, 'r') as f:
                 dest_data = json.load(f)
         
             for variable_name in variable_names:
                 existing_variables = [variable for variable in dest_data["Variables"] if variable["Name"] == variable_name]
                 if existing_variables:
-                    existing_variable = existing_variables[0]
-                    print(f"Variable '{variable_name}' already exists in the destination '{dest_json}' file with Value: {existing_variable['Value']}")
-                    #print(f"Value: {existing_variable['Value']}")
-                    #print(f"Scope: {existing_variable['Scope']}")
+                    for existing_variable in existing_variables:
+                        existing_variable_value = existing_variable["Value"]
+                        existing_variable_environment_id = existing_variable["Scope"]["Environment"][0]
+                        existing_environment_name = next((env["Name"] for env in dest_data["ScopeValues"]["Environments"] if env["Id"] == existing_variable_environment_id), None)
+                        print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file with Value: {existing_variable_value} and Environment: {existing_environment_name}")
                 else:
-                    print("Adding the Variable property block to the destination JSON file")
+                    print("Adding the '{variable_name}' Variable property block to the destination '{project_variable_json}' file")
                     extracted_data = []
                     for variable in source_data:
                         if variable.get("Name") == variable_name:
@@ -53,25 +54,26 @@ jobs:
         
                     dest_data["Variables"].extend(extracted_data)
         
-            with open(dest_json, 'w') as f:
+            with open(project_variable_json, 'w') as f:
                 json.dump(dest_data, f, indent=2)
         
         # Read source data from file
-        with open("${{ inputs.source_data }}", 'r') as f:
+        with open("${{ inputs.global_ref_json }}", 'r') as f:
             source_data = json.load(f)
         
         # Process each source data entry
         for data_entry in source_data:
-            source_json = data_entry["source_json"]
+            global_ref_json = data_entry["global_ref_json"]
             variable_names = data_entry["variable_names"]
-            dest_json = "${{ inputs.dest_json }}"  # Assuming same destination JSON file for all sources
+            project_variable_json = "${{ inputs.project_variable_json }}"  # Assuming same destination JSON file for all sources
         
             # Call function to extract and add variables to destination JSON
             if data_entry.get("copy_all"):
-                all_variables = requests.get(source_json).json()
+                all_variables = requests.get(global_ref_json).json()
                 variable_names.extend(variable["Name"] for variable in all_variables)
         
-            extract_and_add_variable(source_json.strip(), dest_json, variable_names)
+            extract_and_add_variable(global_ref_json.strip(), project_variable_json, variable_names)
+      
       
       
 
@@ -117,9 +119,9 @@ jobs:
 
     #             # Call function to extract and add variables to destination JSON
     #             extract_and_add_variable(source_json, dest_json, variable_names)
-    - name: Get content of ${{ inputs.dest_json }}
+    - name: Get content of ${{ inputs.project_variable_json }}
       run: |
-        cat ${{ inputs.dest_json }}
+        cat ${{ inputs.project_variable_json }}
     - name: Clear Workspace
       if: always()
       run: |
