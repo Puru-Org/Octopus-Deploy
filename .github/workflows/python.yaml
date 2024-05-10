@@ -134,4 +134,5 @@ jobs:
       if: always()
       run: |
         ls -la ./
-        rm -rf $GITHUB_WORKSPACE/*
+        rm -rf ./*
+        ls -la ./
