@@ -27,11 +27,11 @@ jobs:
         import json
         import requests
         
-        def extract_and_add_variable(global_ref_json, project_variable_json, variable_names):
-            if global_ref_json.startswith("http"):
-                source_data = requests.get(global_ref_json).json()
+        def extract_and_add_variable(source_json_url, project_variable_json, variable_names):
+            if source_json_url.startswith("http"):
+                source_data = requests.get(source_json_url).json()
             else:
-                with open(global_ref_json, 'r') as f:
+                with open(source_json_url, 'r') as f:
                     source_data = json.load(f)
         
             with open(project_variable_json, 'r') as f:
@@ -43,10 +43,10 @@ jobs:
                     for existing_variable in existing_variables:
                         existing_variable_value = existing_variable["Value"]
                         existing_variable_environment_id = existing_variable["Scope"]["Environment"][0]
-                        existing_environment_name = next((env["Name"] for env in dest_data["ScopeValues"]["Environments"] if env["Id"] == existing_variable_environment_id), None)
-                        print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file with Value: {existing_variable_value} and Environment: {existing_environment_name}")
+                        existing_variable_environment_name = next((env["Name"] for env in dest_data["ScopeValues"]["Environments"] if env["Id"] == existing_variable_environment_id), None)
+                        print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file with Value: {existing_variable_value} and Environment: {existing_variable_environment_name}")
                 else:
-                    print("Adding the '{variable_name}' Variable property block to the destination '{project_variable_json}' file")
+                    print("Adding the Variable property block to the destination JSON file")
                     extracted_data = []
                     for variable in source_data:
                         if variable.get("Name") == variable_name:
@@ -63,16 +63,17 @@ jobs:
         
         # Process each source data entry
         for data_entry in source_data:
-            global_ref_json = data_entry["global_variable_json_url"]
+            source_json_url = data_entry["global_variable_json_url"]
             variable_names = data_entry["variable_names"]
-            project_variable_json = "${{ inputs.project_variable_json }}"  # Assuming same destination JSON file for all sources
+            project_variable_json = "${{ inputs.project_variable_json }}"  # destination Project JSON file 
         
             # Call function to extract and add variables to destination JSON
             if data_entry.get("copy_all"):
-                all_variables = requests.get(global_variable_json_url).json()
+                all_variables = requests.get(source_json_url).json()
                 variable_names.extend(variable["Name"] for variable in all_variables)
         
-            extract_and_add_variable(global_ref_json.strip(), project_variable_json, variable_names)
+            extract_and_add_variable(source_json_url.strip(), project_variable_json, variable_names)
+      
       
       
       
