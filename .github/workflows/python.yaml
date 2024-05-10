@@ -117,6 +117,9 @@ jobs:
 
     #             # Call function to extract and add variables to destination JSON
     #             extract_and_add_variable(source_json, dest_json, variable_names)
+    - name: Get content of ${{ inputs.dest_json }}
+      run: |
+        cat ${{ inputs.dest_json }}
     - name: Clear Workspace
       if: always()
       run: |
