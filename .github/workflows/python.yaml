@@ -38,7 +38,7 @@ jobs:
             for variable_name in variable_names:
                 existing_variables = [variable["Name"] for variable in dest_data["Variables"]]
                 if variable_name in existing_variables:
-                    print(f"Variable '{variable_name}' already exists in the destination '{dest_json}' file.")
+                    print(f"Variable '{variable_name}' already exists in the destination '{dest_json}' file with Value: {existing_variable['Value']}.")
                 else:
                     print(f"Adding the '{variable_name}' property block to the destination '{dest_json}' file")
                     extracted_data = []
