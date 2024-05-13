@@ -49,14 +49,14 @@ jobs:
                 json.dump(dest_data, f, indent=2)
         
         # Read source data from file
-        with open("source_data.json", 'r') as f:
+        with open("${{ inputs.global_ref_json }}", 'r') as f:
             data = json.load(f)
         
         # Process each entry in source data
         for entry in data:
             source_json = entry["global_variable_json_url"]
             variable_names = entry.get("variable_names", [])
-            dest_json = "${{ inputs.dest_json }}"  # Assuming same destination JSON file for all sources
+            dest_json = "${{ inputs.project_variable_json }}"  # Assuming same destination JSON file for all sources
         
             # If copy_all is true, get all variables from source
             if entry.get("copy_all", False):
