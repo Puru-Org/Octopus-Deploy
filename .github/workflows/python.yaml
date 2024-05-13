@@ -61,7 +61,7 @@ jobs:
                 
                 print(f"Adding the '{variable_name}' Variable property block to the destination '{project_variable_json}' file")
                 extracted_data = []
-                for variable in source_data["Variables"]:
+                for variable in source_data:
                     if variable.get("Name") == variable_name:
                         extracted_data.append(variable)
         
