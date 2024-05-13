@@ -177,5 +177,5 @@ jobs:
       if: always()
       run: |
         ls -la ./
-        rm -rf ./*
-        ls -la ./
+        # rm -rf ./*
+        # ls -la ./
