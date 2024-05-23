@@ -1,0 +1,169 @@
+name: add variables to project from file
+on:
+  # push:
+  #   branches: 
+  #     - main
+  workflow_dispatch:
+    inputs: 
+      projectName: 
+        type: string
+        required: true
+        description: 'Octopus Project Name'
+      octopus_url:
+        type: string
+        default: "https://puru1.octopus.app"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run PowerShell script
+      shell: pwsh
+      env:
+        OCTOPUS_SERVER_URL: ${{ github.event.inputs.octopus_url }}
+        OCTOPUS_API_KEY: ${{ secrets.OCTOPUS_API_KEY }}
+        #GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        variablefilePath: "variable.json"
+        projectName: ${{ github.event.inputs.projectName }}
+        #exportedVariablesSet: exportedVariableSet-3
+      run: |
+        # Define necessary variables
+        $octopusURL = "$env:OCTOPUS_SERVER_URL"
+        $spaceName = "Default"
+        $destinationProjectName = "$env:projectName"
+        $apiKey = "$env:OCTOPUS_API_KEY"
+        $variableJsonPath = "$env:variablefilePath"
+
+        # Headers for API requests
+        $header = @{
+            "X-Octopus-ApiKey" = $apiKey
+        }
+
+        # Fetch space details
+        $space = Invoke-RestMethod -Method Get -Uri "$octopusURL/api/spaces/all" -Headers $header | Where-Object {$_.Name -eq $spaceName}
+        if ($null -eq $space) {
+            throw "Space not found: $spaceName"
+        }
+
+        # Fetch project list and get destination project details
+        $projectList = Invoke-RestMethod -Uri "$octopusURL/api/$($space.Id)/projects/all" -Headers $header
+        $destinationProject = $projectList | Where-Object { $_.Name -eq $destinationProjectName }
+        if ($null -eq $destinationProject) {
+            throw "Project not found: $destinationProjectName"
+        }
+        $destinationProjectVariableSetId = $destinationProject.VariableSetId
+
+        # Fetch environment list
+        $destinationEnvironmentList = Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/environments/all" -Headers $header
+
+        # Load variables from variable.json
+        $variablesJson = Get-Content -Path "$variableJsonPath" -Raw | ConvertFrom-Json
+
+        # Fetch existing project variables
+        $variableSet = Invoke-RestMethod -Method Get -Uri "$octopusURL/api/variables/$destinationProjectVariableSetId" -Headers $header
+        if ($null -eq $variableSet) {
+            throw "Variable set not found for project: $destinationProjectName"
+        }
+        $existingVariables = $variableSet.Variables
+
+        # Function to get environment ID by name
+        function Get-EnvironmentIdByName {
+            param (
+                [string]$environmentName
+            )
+            $environment = $destinationEnvironmentList | Where-Object { $_.Name -eq $environmentName }
+            if ($environment) {
+                return $environment.Id
+            } else {
+                return $null
+            }
+        }
+
+        # Helper function to update or add variables
+        # Helper function to update or add variables
+        function Update-OrAddVariable {
+            param (
+                [string]$variableName,
+                [string]$variableValue,
+                [array]$environmentNames
+            )
+
+            $existingVariable = $existingVariables | Where-Object { $_.Name -eq $variableName }
+            if ($null -ne $existingVariable) {
+                $existingScopeEnvironments = $existingVariable.Scope.Environment
+            } else {
+                $existingScopeEnvironments = @()
+            }
+
+            $updated = $false
+
+            # Check if all source environments are in the destination variable's scope
+            foreach ($env in $environmentNames) {
+                $envId = Get-EnvironmentIdByName -environmentName $env
+                if ($null -eq $envId) {
+                    Write-Warning "Environment '$env' not found. Skipping environment for variable '$variableName'."
+                    continue
+                }
+
+                if (-not $existingScopeEnvironments.Contains($envId)) {
+                    $existingScopeEnvironments += $envId
+                    $updated = $true
+                }
+            }
+
+            # Update variable value if it already exists
+            if ($null -ne $existingVariable) {
+                if ($existingVariable.Value -eq $variableValue -and ($existingVariable.Scope.Environment -join ",") -eq ($existingScopeEnvironments -join ",")) {
+                    Write-Output "Variable '$variableName' already exists with the same value '$variableValue' for environments '$($existingScopeEnvironments -join ", ")'. No update needed."
+                    return
+                }
+
+                $existingVariable.Value = $variableValue
+                $existingVariable.Scope.Environment = $existingScopeEnvironments
+                $updated = $true
+            }
+
+            # Add new variable if it doesn't exist
+            if (-not $updated) {
+                $newVariable = @{
+                    Id = [System.Guid]::NewGuid().ToString()
+                    Name = $variableName
+                    Value = $variableValue
+                    Scope = @{
+                        Environment = $existingScopeEnvironments
+                    }
+                    IsEditable = $false
+                    Type = "String"
+                }
+                $existingVariables += [pscustomobject]$newVariable
+                Write-Output "Added new variable '$variableName' with value '$variableValue' for environments '$($existingScopeEnvironments -join ", ")'"
+            }
+        }
+
+        # Process each variable from the JSON file
+        foreach ($variable in $variablesJson.Variables) {
+            $variableName = $variable.Name
+            $variableValue = $variable.Value
+            $variableScope = $variable.Scope.Environment
+            Update-OrAddVariable -variableName $variableName -variableValue $variableValue -environmentNames $variableScope
+        }
+
+        # Ensure variables are in the correct format
+        $variableSet = $variableSet.Variables = @($existingVariables)
+        #$variableSet.Variables = @($existingVariables)
+        # Convert the variable set to JSON
+        $jsonPayload = $variableSet | ConvertTo-Json -Depth 10
+
+        # Log the JSON payload for debugging
+        Write-Output "JSON Payload:"
+        Write-Output $jsonPayload
+
+        # Send the PUT request to update the project variables
+        try {
+            $updateResponse = Invoke-RestMethod -Method Put -Uri "$octopusURL/api/variables/$destinationProjectVariableSetId" -Headers $header -Body $jsonPayload
+            Write-Output "Project variables updated successfully."
+        } catch {
+            Write-Error "Failed to update project variables: $_"
+        }
