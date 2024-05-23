@@ -1,0 +1,67 @@
+{
+    "Variables": [
+        {
+            "Name": "name1",
+            "Value": "Test/QA/Prod-scope-test",
+            "Scope": {
+                "Environment": [
+                    "Production",
+                    "Test",
+                    "QA"
+                ]
+            }
+        },
+        {
+            "Name": "name1",
+            "Value": "scope-test-movingtoQA",
+            "Scope": {
+                "Environment": [
+                    "QA"
+                ]
+            }
+        },
+        {
+            "Name": "name1",
+            "Value": "QA-scope-test",
+            "Scope": {
+                "Environment": [
+                    "QA"
+                ]
+            }
+        },
+        {
+            "Name": "name1",
+            "Value": "Test-scope-test",
+            "Scope": {
+                "Environment": [
+                    "Test"
+                ]
+            }
+        },
+        {
+            "Name": "name1",
+            "Value": "Staging-scope-test",
+            "Scope": {
+                "Environment": [
+                    "Staging"
+                ]
+            }
+        },
+        {
+            "Name": "name2",
+            "Value": "Prod-scope-test",
+            "Scope": {
+                "Environment": [
+                    "Production"   
+                ]
+            }
+        },
+        {
+            "Name": "name2",
+            "Value": "puru2-scope-test",
+            "Environment": [
+                "Test"
+            ]
+        }
+    ]
+}
