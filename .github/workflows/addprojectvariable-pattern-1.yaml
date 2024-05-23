@@ -48,8 +48,9 @@ jobs:
         }
 
         # Fetch project list and get destination project details
-        $projectList = Invoke-RestMethod -Uri "$octopusURL/api/$($space.Id)/projects/all" -Headers $header
-        $destinationProject = $projectList | Where-Object { $_.Name -eq $destinationProjectName }
+        #$projectList = Invoke-RestMethod -Uri "$octopusURL/api/$($space.Id)/projects/all" -Headers $header
+        #$destinationProject = $projectList | Where-Object { $_.Name -eq $destinationProjectName }
+        $destinationProject = (Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/projects/all" -Headers $header) | Where-Object {$_.Name -eq $destinationProjectName}
         if ($null -eq $destinationProject) {
             throw "Project not found: $destinationProjectName"
         }
