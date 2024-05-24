@@ -1,4 +1,4 @@
-name: Import variable form file to project
+name: variable form file to project pattern-3
 on:
   # push:
   #   branches: 
@@ -40,7 +40,11 @@ jobs:
         
             try {
                 # Define header for API call
-                $header = @{ "X-Octopus-ApiKey" = $octopusAPIKey }
+                #$header = @{ "X-Octopus-ApiKey" = $octopusAPIKey }
+                $header = @{
+                    "X-Octopus-ApiKey" = $octopusAPIKey
+                    "Content-Type" = "application/json"
+                }
         
                 # Get space
                 $space = (Invoke-RestMethod -Method Get -Uri "$octopusURL/api/spaces/all" -Headers $header) | Where-Object { $_.Name -eq $spaceName }
