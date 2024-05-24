@@ -25,7 +25,7 @@ jobs:
         OCTOPUS_SERVER_URL: ${{ github.event.inputs.octopus_url }}
         OCTOPUS_API_KEY: ${{ secrets.OCTOPUS_API_KEY }}
         #GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        variablefilePath: "variableset-1.json"
+        variablefilePath: "variable.json"
         projectName: ${{ github.event.inputs.projectName }}
         #exportedVariablesSet: exportedVariableSet-3
       run: |
