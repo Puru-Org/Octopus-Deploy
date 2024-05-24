@@ -14,7 +14,7 @@ on:
         default: "https://puru1.octopus.app"
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -96,6 +96,13 @@ jobs:
             $existingVariable = $projectVariables.Variables | Where-Object { $_.Name -eq $varName }
         
             if ($existingVariable) {
+                # Ensure scope property exists
+                if (-not $existingVariable.PSObject.Properties["Scope"]) {
+                    $existingVariable | Add-Member -MemberType NoteProperty -Name Scope -Value @{
+                        Environment = @()
+                    }
+                }
+        
                 # Check if the scopes match
                 $scopesMatch = $true
                 foreach ($scope in $existingVariable.Scope.Environment) {
@@ -194,5 +201,5 @@ jobs:
         }
         
         # Example call to the function
-        # Set-OctopusVariablesFromJson -jsonFilePath "path\to\variables.json" -octopusURL "https://xxx.octopus.app/" -octopusAPIKey "API-xxx" -projectName "hello_world"
+        # Set-OctopusVariablesFromJson -jsonFilePath "path\to\variables.json" -octopusURL "https://xxx.octopus.app/" -octopusAPIKey "API-xxx" -projectName "hello_world"    
         Set-OctopusVariablesFromJson -jsonFilePath "$env:variablefilePath" -octopusURL "$env:OCTOPUS_SERVER_URL" -octopusAPIKey "$env:OCTOPUS_API_KEY" -projectName "project"
