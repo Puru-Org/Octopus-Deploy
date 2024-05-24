@@ -168,5 +168,5 @@ jobs:
         # Example call to the function
         #Set-OctopusVariablesFromJson -jsonFilePath "path\to\variables.json" -octopusURL "https://xxx.octopus.app/" -octopusAPIKey "API-xxx" -projectName "hello_world"
     
-        Set-OctopusVariablesFromJson -jsonFilePath "$env:variablefilePath" -octopusURL "$env:OCTOPUS_SERVER_URL" -octopusAPIKey "$env:OCTOPUS_API_KEY" -projectName "project"
+        Set-OctopusVariablesFromJson -jsonFilePath "$env:variablefilePath" -octopusURL "$env:OCTOPUS_SERVER_URL" -octopusAPIKey "$env:OCTOPUS_API_KEY" -projectName "$env:projectName"
     
