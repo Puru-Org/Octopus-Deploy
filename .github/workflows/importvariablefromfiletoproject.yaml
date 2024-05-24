@@ -1,0 +1,273 @@
+name: Import variable form file to project
+on:
+  # push:
+  #   branches: 
+  #     - main
+  workflow_dispatch:
+    inputs: 
+      projectName: 
+        type: string
+        required: true
+        description: 'Octopus Project Name'
+      octopus_url:
+        type: string
+        default: "https://puru1.octopus.app"
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Run PowerShell script to add project variables
+      shell: pwsh
+      env:
+        OCTOPUS_SERVER_URL: ${{ github.event.inputs.octopus_url }}
+        OCTOPUS_API_KEY: ${{ secrets.OCTOPUS_API_KEY }}
+        #GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        variablefilePath: "variableset-1.json"
+        projectName: ${{ github.event.inputs.projectName }}
+        #exportedVariablesSet: exportedVariableSet-3
+      run: |
+        # Define octopus variables
+        $octopusURL = "$env:OCTOPUS_SERVER_URL"
+        $octopusAPIKey = "$env:OCTOPUS_API_KEY"
+        $variableSetFilePath = "$env:variablefilePath"
+        $destinationProjectName = "$env:destProjectName"
+        $header = @{ "X-Octopus-ApiKey" = $octopusAPIKey }
+
+        # Define working variables
+        $spaceName = "Default"
+
+        # Set this value to add additional variable values found on source data not in destination
+        $addAdditionalVariableValuesOnExistingVariableSets = $True
+        # Set this value to to true to overwrite existing variable values
+        $overwriteExistingVariables = $True
+        # Set this value to to true to keep existing account variable values unchanged from the source file
+        $keepSourceAccountVariableValues = $True
+
+        #region "Functions"
+        function Convert-SourceIdListToDestinationIdList {
+            param(
+                $SourceList,
+                $DestinationList,
+                $IdList
+            )
+
+            $NewIdList = @()
+            Write-Host "Converting id list with $($IdList.Length) item(s) over to destination space"     
+            foreach ($idValue in $idList) {
+                $ConvertedId = Convert-SourceIdToDestinationId -SourceList $SourceList -DestinationList $DestinationList -IdValue $idValue
+
+                if ($null -ne $ConvertedId) {
+                    $NewIdList += $ConvertedId
+                }
+            }
+
+            return @($NewIdList)
+        }
+
+        function Convert-SourceIdToDestinationId {
+            param(
+                $SourceList,
+                $DestinationList,
+                $IdValue
+            )
+
+            $idValueSplit = $IdValue -split "-"
+            if ($idValueSplit.Length -le 2) {
+                if (($idValueSplit[1] -match "^[\d\.]+$") -eq $false) {
+                    Write-Host "The id value $idValue is a built in id, no need to convert, returning it."
+                    return $IdValue
+                }
+            }
+            
+            Write-Host "Getting Name of $IdValue"
+            $sourceItem = Get-OctopusItemById -ItemList $SourceList -ItemId $IdValue
+
+            $nameToUse = $sourceItem.Name
+            if ([string]::IsNullOrWhiteSpace($nameToUse)) {
+                Write-Host "The name property is null attempting the username property"
+                $nameToUse = $sourceItem.UserName
+            }
+
+            if ([string]::IsNullOrWhiteSpace($nameToUse)) {
+                Write-Host "Unable to find a name property for $IdValue"
+                return $null
+            }
+
+            Write-Host "The name of $IdValue is $nameToUse, attempting to find in destination list"    
+
+            $destinationItem = Get-OctopusItemByName -ItemName $nameToUse -ItemList $DestinationList    
+
+            if ($null -eq $destinationItem) {
+                Write-Host "Unable to find $nameToUse in the destination list"
+                return $null
+            }
+            else {
+                Write-Host "The destination id for $nameToUse is $($destinationItem.Id)"
+                return $destinationItem.Id
+            }
+        }
+
+        function Get-OctopusItemById {
+            param (
+                $ItemList,
+                $ItemId
+            ) 
+                
+            Write-Host "Attempting to find $ItemId in the item list of $($ItemList.Length) item(s)"
+
+            foreach ($item in $ItemList) {
+                Write-Host "Checking to see if $($item.Id) matches with $ItemId"
+                if ($item.Id -eq $ItemId) {
+                    Write-Host "The Ids match, return the item $($item.Name)"
+                    return $item
+                }
+            }
+
+            Write-Host "No match found returning null"
+            return $null    
+        }
+
+        function Get-OctopusItemByName {
+            param (
+                $ItemList,
+                $ItemName
+            )    
+
+            return ($ItemList | Where-Object { $_.Name -eq $ItemName })
+        }
+        #endregion
+
+        # Get space
+        $spaceList = Invoke-RestMethod "$octopusURL/api/spaces/all" -Headers $header
+        $space = $spaceList | Where-Object { $_.Name -eq $spaceName }
+
+        # Get destination project
+        $projectList = Invoke-RestMethod "$octopusURL/api/$($space.Id)/projects/all" -Headers $header
+        $destinationProject = $projectList | Where-Object { $_.Name -eq $destinationProjectName }
+        $destinationProjectVariableSetId = $destinationProject.VariableSetId
+
+        # Get source variableset from file
+        $sourceVariableSetVariables = [IO.File]::ReadAllText($variableSetFilePath) | ConvertFrom-Json
+        $sourceEnvironmentList = $sourceVariableSetVariables.ScopeValues.Environments
+        $sourceChannelList = $sourceVariableSetVariables.ScopeValues.Channels
+        $sourceRunbookList = $sourceVariableSetVariables.ScopeValues.Processes | Where-Object { $_.ProcessType -eq "Runbook" }
+
+        # Get destination data
+        $destinationData = @{
+            OctopusUrl    = $octopusURL;
+            OctopusApiKey = $octopusApiKey;
+            SpaceName     = $spaceName
+        }
+
+        $destinationApiInformation = Invoke-RestMethod -Method Get -Uri "$octopusURL/api" -Headers $header
+        $destinationData.Version = $destinationApiInformation.Version
+        Write-Host "The version of $octopusURL is $($destinationData.Version)"
+        $splitVersion = $destinationData.Version -split "\."
+        $destinationData.MajorVersion = [int]$splitVersion[0]
+        $destinationData.MinorVersion = [int]$splitVersion[1]
+        $destinationData.HasRunbooks = ($destinationData.MajorVersion -ge 2019 -and $destinationData.MinorVersion -ge 11) -or $destinationData.MajorVersion -ge 2020
+
+        $destinationVariableSetVariables = Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/variables/$destinationProjectVariableSetId" -Headers $header
+        $destinationEnvironmentList = Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/environments/all" -Headers $header
+        $destinationProjectChannelList = (Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/projects/$($destinationProject.Id)/channels" -Headers $header)
+        $destinationRunbookList = @()
+
+        If ($destinationData.HasRunbooks -eq $True) {
+            $destinationRunbookList = Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/projects/$($destinationProject.Id)/runbooks" -Headers $header
+        }
+
+        $variableTracker = @{}
+
+        try {
+            foreach ($octopusVariable in $sourceVariableSetVariables.Variables) {
+                $variableName = $octopusVariable.Name
+
+                if (Get-Member -InputObject $octopusVariable.Scope -Name "Environment" -MemberType Properties) {
+                    Write-Host "$variableName has environment scoping, converting to destination values"
+                    $NewEnvironmentIds = @(Convert-SourceIdListToDestinationIdList -SourceList $sourceEnvironmentList -DestinationList $destinationEnvironmentList -IdList $octopusVariable.Scope.Environment)
+                    $octopusVariable.Scope.Environment = @($NewEnvironmentIds)            
+                }
+
+                if (Get-Member -InputObject $octopusVariable.Scope -Name "Channel" -MemberType Properties) {
+                    Write-Host "$variableName has channel scoping, converting to destination values"
+                    $NewChannelIds = @(Convert-SourceIdListToDestinationIdList -SourceList $sourceChannelList -DestinationList $destinationProjectChannelList -IdList $octopusVariable.Scope.Channel)
+                    $octopusVariable.Scope.Channel = @($NewChannelIds)            
+                }
+
+                if (Get-Member -InputObject $octopusVariable.Scope -Name "ProcessOwner" -MemberType Properties) {
+                    if ($destinationData.HasRunbooks) {
+                        Write-Host "$variableName has process owner scoping, converting to destination values"
+                        $NewOwnerIds = @()
+                        foreach ($value in $octopusVariable.Scope.ProcessOwner) {
+                            Write-Host "Attempting to convert $value to a destination value"
+
+                            if ($value -like "Projects-*") {
+                                Write-Host "The process owner is the project, converting to the new project id"
+                                $NewOwnerIds += $DestinationProjectData.Project.Id
+                            }
+                            elseif ($value -like "Runbooks-*") {
+                                Write-Host "The process owner is a runbook, converting to the new runbook id"
+                                $NewOwnerIds += Convert-SourceIdToDestinationId -SourceList $sourceRunbookList -DestinationList $destinationRunbookList -IdValue $value
+                            }
+                        }
+
+                        Write-Host "The new process owner ids are $NewOwnerIds"
+                        
+                        $octopusVariable.Scope.ProcessOwner = @($NewOwnerIds)            
+                    }
+                    else {
+                        $octopusVariable.Scope.PSObject.Properties.Remove('ProcessOwner')    
+                    }
+                }
+
+                if ($octopusVariable.Type -match ".*Account") {
+                    if ($keepSourceAccountVariableValues -eq $false) {
+                        Write-Host "Warning: Cannot convert account type to destination account as keepSourceAccountVariableValues set to false. Setting to DUMMY VALUE" -ForegroundColor Yellow  
+                        $octopusVariable.Value = "CHANGEME_DUMMYVALUE"        
+                    }    
+                }
+
+                if ($variableTracker.ContainsKey($variableName)) {
+                    if ($addAdditionalVariableValuesOnExistingVariableSets -eq $true) {
+                        Write-Host "The variable $variableName already exists and the setting for adding additional values is true, checking to see if the value is already defined"
+                        $octopusVariableValueFromTracker = $variableTracker[$variableName]
+                        $variableValuesFromTracker = @($octopusVariableValueFromTracker | Where-Object { ($_.Value -eq $octopusVariable.Value) -and ($_.Scope -eq $octopusVariable.Scope) })
+                        
+                        if ($variableValuesFromTracker.Length -le 0) {
+                            Write-Host "Adding additional value for $variableName"
+                            $variableTracker[$variableName] += $octopusVariable        
+                        }
+                    }
+                    elseif ($overwriteExistingVariables -eq $true) {
+                        Write-Host "The variable $variableName already exists and the setting for overwriting values is true. Removing existing variable from tracker and adding the new value"
+                        $variableTracker.Remove($variableName)
+                        $variableTracker.Add($variableName, @($octopusVariable))
+                    }
+                    else {
+                        Write-Host "The variable $variableName already exists but the setting for adding additional values is false"
+                    }
+                }
+                else {
+                    Write-Host "Adding $variableName to tracker"
+                    $variableTracker.Add($variableName, @($octopusVariable))
+                }
+            }
+
+            Write-Host "Updating destination project variable set with new values"
+            $destinationVariableSetVariables.Variables = @($variableTracker.Values) | Select-Object -ExpandProperty Value
+            $jsonBody = $destinationVariableSetVariables | ConvertTo-Json -Depth 10
+            $updateResult = Invoke-RestMethod -Method Put -Uri "$octopusURL/api/$($space.Id)/variables/$destinationProjectVariableSetId" -Headers $header -Body $jsonBody
+        }
+        catch {
+            Write-Error $_.Exception.Message
+        }
+    - name: Clear Workspace
+      if: always()
+      run: |
+        ls -LiteralPath .
+        rm -Recurse ${{github.workspace}}\*
+        Write-Output "Workspace has been cleared"
+        ls -LiteralPath .
