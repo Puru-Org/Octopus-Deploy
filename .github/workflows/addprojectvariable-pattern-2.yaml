@@ -92,56 +92,31 @@ jobs:
                 return
             }
         
-            # Find existing variable with matching name
-            $existingVariable = $projectVariables.Variables | Where-Object { $_.Name -eq $varName }
+            # Find existing variable with the same name
+            $existingVariables = $projectVariables.Variables | Where-Object {
+                $_.Name -eq $varName
+            }
         
-            if ($existingVariable) {
-                # Ensure scope property exists
-                if (-not $existingVariable.PSObject.Properties["Scope"]) {
-                    $existingVariable | Add-Member -MemberType NoteProperty -Name Scope -Value @{
-                        Environment = @()
-                    }
+            $matchedVariable = $null
+            foreach ($var in $existingVariables) {
+                if ($var.Scope.Environment -eq $scopeValues.Environment) {
+                    $matchedVariable = $var
+                    break
                 }
+            }
         
-                # Check if the scopes match
-                $scopesMatch = $true
-                foreach ($scope in $existingVariable.Scope.Environment) {
-                    if (-not ($scopeValues.Environment -contains $scope)) {
-                        $scopesMatch = $false
-                        break
-                    }
-                }
-        
-                # Check if the value matches
-                if ($existingVariable.Value -eq $varValue) {
-                    if (-not $scopesMatch) {
-                        # Add missing scope environments
-                        $existingVariable.Scope.Environment += $scopeValues.Environment | Where-Object { $_ -notin $existingVariable.Scope.Environment }
-                        Write-Output "Added missing scope environments to variable $varName"
-                    } else {
-                        Write-Output "Variable with the same name, scope, and value already exists. Skipping update."
-                        return
-                    }
+            if ($matchedVariable) {
+                if ($matchedVariable.Value -ne $varValue) {
+                    $matchedVariable.Value = $varValue
+                    Write-Output "Updated variable $varName with new value $varValue"
                 } else {
-                    if ($scopesMatch) {
-                        # Update existing variable with new value
-                        $existingVariable.Value = $varValue
-                        Write-Output "Updated existing variable $varName with new value $varValue"
-                    } else {
-                        # Create a new variable with the new scope and value
-                        $variable = [PSCustomObject]@{
-                            Name = $varName
-                            Value = $varValue
-                            Type = "String"
-                            IsSensitive = $false
-                            Scope = $scopeValues
-                        }
-                        $projectVariables.Variables += $variable
-                        Write-Output "Added new variable $varName with new scope and value"
+                    $additionalScopes = $scopeValues.Environment | Where-Object { $matchedVariable.Scope.Environment -notcontains $_ }
+                    if ($additionalScopes) {
+                        $matchedVariable.Scope.Environment += $additionalScopes
+                        Write-Output "Added missing scopes to variable $varName"
                     }
                 }
             } else {
-                # Define new variable
                 $variable = [PSCustomObject]@{
                     Name = $varName
                     Value = $varValue
@@ -149,11 +124,8 @@ jobs:
                     IsSensitive = $false
                     Scope = $scopeValues
                 }
-                Write-Output "Variable details prepared"
-        
-                # Add the new value to the variables collection
                 $projectVariables.Variables += $variable
-                Write-Output "Added variable $varName to the project variables"
+                Write-Output "Added new variable $varName to the project variables"
             }
         
             # Update the collection
@@ -168,10 +140,10 @@ jobs:
         
         function Set-OctopusVariablesFromJson {
             param(
-                $jsonFilePath,      # Path to the JSON file
-                $octopusURL,        # Octopus Server URL
-                $octopusAPIKey,     # API key goes here
-                $projectName,       # Replace with your project name
+                $jsonFilePath,        # Path to the JSON file
+                $octopusURL,          # Octopus Server URL
+                $octopusAPIKey,       # API key goes here
+                $projectName,         # Replace with your project name
                 $spaceName = "Default"  # Replace with the name of the space you are working in
             )
         
@@ -188,7 +160,7 @@ jobs:
                 $scopes = @{
                     Environment = $variable.Scope.Environment
                 }
-                
+        
                 Set-OctopusVariable -octopusURL $octopusURL `
                                     -octopusAPIKey $octopusAPIKey `
                                     -projectName $projectName `
@@ -201,5 +173,5 @@ jobs:
         }
         
         # Example call to the function
-        # Set-OctopusVariablesFromJson -jsonFilePath "path\to\variables.json" -octopusURL "https://xxx.octopus.app/" -octopusAPIKey "API-xxx" -projectName "hello_world"    
+        #Set-OctopusVariablesFromJson -jsonFilePath "path\to\variables.json" -octopusURL "https://xxx.octopus.app/" -octopusAPIKey "API-xxx" -projectName "hello_world"       
         Set-OctopusVariablesFromJson -jsonFilePath "$env:variablefilePath" -octopusURL "$env:OCTOPUS_SERVER_URL" -octopusAPIKey "$env:OCTOPUS_API_KEY" -projectName "project"
