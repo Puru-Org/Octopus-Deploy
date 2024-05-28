@@ -10,9 +10,6 @@ on:
         type: string
         required: true
         description: 'Path to the JSON file containing project variables'
-    secrets:
-      GITHUB_TOKEN: 
-        required: true
 
 jobs:
   build:
