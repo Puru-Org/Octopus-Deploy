@@ -64,6 +64,15 @@
                     "Test"
                 ]
             }
+        },
+        {
+            "Name": "name2",
+            "Value": "puru2-scope-QA",
+            "Scope": {
+                "Environment": [
+                    "QA"
+                ]
+            }
         }
     ]
 }

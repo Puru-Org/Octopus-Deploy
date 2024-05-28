@@ -1,0 +1,41 @@
+name: Export Global Variables to Project JSON
+on:
+  workflow_call:
+    inputs: 
+      global_ref_json: 
+        type: string
+        required: true
+        description: 'Path to the JSON file containing source data'
+      project_variable_json:
+        type: string
+        required: true
+        description: 'Path to the JSON file containing project variables'
+    secrets:
+      GITHUB_TOKEN: 
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.10
+    #   credentials:
+    #     username: ${{ secrets.DOCKER_USERNAME }}
+    #     password: ${{ secrets.DOCKER_PASSWORD }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set environment variables
+      run: |
+        echo "GLOBAL_REF_JSON=${{ inputs.global_ref_json }}" >> $GITHUB_ENV
+        echo "PROJECT_VARIABLE_JSON=${{ inputs.project_variable_json }}" >> $GITHUB_ENV
+
+    - name: Install Python dependencies
+      run: pip install requests
+
+    - name: Run Python script
+      run: python python-scripts/json_variable_extractor.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
