@@ -39,3 +39,12 @@ jobs:
       run: python python-scripts/json_variable_extractor.py
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get content of ${{ inputs.project_variable_json }}
+      run: |
+        cat ${{ inputs.project_variable_json }}
+    - name: Clear Workspace
+      if: always()
+      run: |
+        ls -la ${{ github.workspace }}
+        rm -rf ${{ github.workspace }}/*
+        ls -la ${{ github.workspace }}    
