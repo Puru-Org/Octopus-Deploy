@@ -41,14 +41,17 @@ jobs:
         import requests
         import os
 
-        def extract_and_add_variable(source_json_url, project_variable_json, variable_names):
-            headers = {'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'}
-            
-            response = requests.get(source_json_url, headers=headers)
+        def fetch_json_from_raw_url(raw_url):
+            headers = {
+                'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'
+            }
+            response = requests.get(raw_url, headers=headers)
             if response.status_code != 200:
-                raise Exception(f"Error fetching JSON from URL '{source_json_url}': {response.status_code} {response.reason}")
+                raise Exception(f"Error fetching JSON from URL '{raw_url}': {response.status_code} {response.reason}")
+            return response.json()
 
-            source_data = response.json()
+        def extract_and_add_variable(source_json_url, project_variable_json, variable_names):
+            source_data = fetch_json_from_raw_url(source_json_url)
 
             with open(project_variable_json, 'r') as f:
                 dest_data = json.load(f)
@@ -82,8 +85,7 @@ jobs:
 
             # Call function to extract and add variables to destination JSON
             if data_entry.get("copy_all"):
-                headers = {'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'}
-                all_variables = requests.get(source_json_url, headers=headers).json()
+                all_variables = fetch_json_from_raw_url(source_json_url)
                 variable_names.extend(variable["Name"] for variable in all_variables)
 
             extract_and_add_variable(source_json_url.strip(), project_variable_json, variable_names)
