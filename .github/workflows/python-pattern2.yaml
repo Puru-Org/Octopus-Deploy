@@ -33,9 +33,59 @@ jobs:
       run: pip install requests
 
     - name: Run Python script
-      run: python python-scripts/json_variable_extractor.py
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        import json
+        import requests
+        import os
+
+        def extract_and_add_variable(source_json_url, project_variable_json, variable_names):
+            headers = {'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'}
+            
+            response = requests.get(source_json_url, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Error fetching JSON from URL '{source_json_url}': {response.status_code} {response.reason}")
+
+            source_data = response.json()
+
+            with open(project_variable_json, 'r') as f:
+                dest_data = json.load(f)
+
+            dest_environment_list = dest_data["ScopeValues"]["Environments"]
+            dest_environment_dict = {env["Id"]: env["Name"] for env in dest_environment_list}
+
+            for variable_name in variable_names:
+                existing_variables = [variable for variable in dest_data["Variables"] if variable["Name"] == variable_name]
+                if variable_name in existing_variables:
+                    print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file.")
+                else:
+                    print(f"Adding the '{variable_name}' Variable property block to the destination '{project_variable_json}' file")
+                    extracted_data = [variable for variable in source_data if variable.get("Name") == variable_name]
+
+                    dest_data["Variables"].extend(extracted_data)
+
+            with open(project_variable_json, 'w') as f:
+                json.dump(dest_data, f, indent=2)
+
+        # Read source data from environment variable
+        global_ref_json_path = os.getenv("GLOBAL_REF_JSON")
+        with open(global_ref_json_path, 'r') as f:
+            source_data = json.load(f)
+
+        # Process each source data entry
+        for data_entry in source_data:
+            source_json_url = data_entry["global_variable_json_url"]
+            variable_names = data_entry["variable_names"]
+            project_variable_json = os.getenv("PROJECT_VARIABLE_JSON")  # Assuming same destination JSON file for all sources
+
+            # Call function to extract and add variables to destination JSON
+            if data_entry.get("copy_all"):
+                headers = {'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'}
+                all_variables = requests.get(source_json_url, headers=headers).json()
+                variable_names.extend(variable["Name"] for variable in all_variables)
+
+            extract_and_add_variable(source_json_url.strip(), project_variable_json, variable_names)
     - name: Get content of ${{ inputs.project_variable_json }}
       run: |
         cat ${{ inputs.project_variable_json }}
@@ -44,4 +94,4 @@ jobs:
       run: |
         ls -la ${{ github.workspace }}
         rm -rf ${{ github.workspace }}/*
-        ls -la ${{ github.workspace }}    
+        ls ${{ github.workspace }}    

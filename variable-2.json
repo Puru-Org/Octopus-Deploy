@@ -1,7 +1,7 @@
 {
     "Variables": [
         {
-            "Name": "name1",
+            "Name": "variable-1",
             "Value": "Test/QA/Prod-scope-test",
             "Scope": {
                 "Environment": [
@@ -12,7 +12,7 @@
             }
         },
         {
-            "Name": "name1",
+            "Name": "variable-1",
             "Value": "scope-test-movingtoQA",
             "Scope": {
                 "Environment": [
@@ -21,16 +21,17 @@
             }
         },
         {
-            "Name": "name1",
+            "Name": "variable-1",
             "Value": "QA-scope-test",
             "Scope": {
                 "Environment": [
-                    "QA"
+                    "QA",
+                    "Test"
                 ]
             }
         },
         {
-            "Name": "name1",
+            "Name": "variable-1",
             "Value": "Test-scope-test",
             "Scope": {
                 "Environment": [
@@ -39,7 +40,7 @@
             }
         },
         {
-            "Name": "name1",
+            "Name": "variable-1",
             "Value": "Staging-scope-test",
             "Scope": {
                 "Environment": [
@@ -48,7 +49,7 @@
             }
         },
         {
-            "Name": "name2",
+            "Name": "variable-2",
             "Value": "Prod-scope-test",
             "Scope": {
                 "Environment": [
@@ -57,11 +58,16 @@
             }
         },
         {
-            "Name": "name2",
+            "Name": "variable-2",
             "Value": "puru2-scope-test",
             "Environment": [
                 "Test"
             ]
+        },
+        {
+            "Name": "variable-2",
+            "Value": "puru2-withoutscope",
+            "Environment": []
         }
     ]
 }
