@@ -34,7 +34,7 @@ jobs:
 
     - name: Run Python script
       env:
-        PYTHON_ACCESS_TOKEN: ${{ secrets.PYTHON_ACCESS_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         python - <<'EOF'
         import json
@@ -43,7 +43,7 @@ jobs:
 
         def fetch_json_from_raw_url(raw_url):
             headers = {
-                'Authorization': f'token {os.getenv("PYTHON_ACCESS_TOKEN")}'
+                'Authorization': f'token {os.getenv("GITHUB_TOKEN")}'
             }
             response = requests.get(raw_url, headers=headers)
             if response.status_code != 200:
@@ -98,4 +98,4 @@ jobs:
       run: |
         ls -la ${{ github.workspace }}
         rm -rf ${{ github.workspace }}/*
-        ls ${{ github.workspace }} 
+        ls ${{ github.workspace }}    
