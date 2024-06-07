@@ -101,6 +101,7 @@ jobs:
     - name: Clear Workspace
       if: always()
       run: |
-        ls -la ${{ github.workspace }}
-        rm -rf ${{ github.workspace }}/*
-        ls ${{ github.workspace }}    
+        ls -la .
+        rm -rf ./*
+        echo "Workspace has been cleared"
+        ls .    
