@@ -34,7 +34,7 @@ jobs:
 
     - name: Run Python script
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         python - <<'EOF'
         import json
