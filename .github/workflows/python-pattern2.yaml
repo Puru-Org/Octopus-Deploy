@@ -10,6 +10,10 @@ on:
         type: string
         required: true
         description: 'Path to the JSON file containing project variables'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: ''
 
 jobs:
   build:
