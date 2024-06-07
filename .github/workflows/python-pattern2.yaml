@@ -34,7 +34,7 @@ jobs:
 
     - name: Run Python script
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         python - <<'EOF'
         import json
@@ -43,8 +43,7 @@ jobs:
 
         def fetch_json_from_raw_url(raw_url):
             headers = {
-                'Authorization': f'token {os.getenv("GITHUB_TOKEN")}',
-                'X-GitHub-Api-Version': '2022-11-28',
+                'Authorization': f'token {os.getenv("GH_TOKEN")}',
                 'Accept': 'application/vnd.github.v3.raw'
             }
             response = requests.get(raw_url, headers=headers)
