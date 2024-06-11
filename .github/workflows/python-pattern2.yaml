@@ -38,7 +38,7 @@ jobs:
 
     - name: Run Python script
       env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        REPO_TOKEN: ${{ secrets.REPO_TOKEN }}
       run: |
         python - <<'EOF'
         import json
@@ -47,7 +47,7 @@ jobs:
 
         def fetch_json_from_raw_url(raw_url):
             headers = {
-                'Authorization': f'token {os.getenv("GH_TOKEN")}',
+                'Authorization': f'token {os.getenv("REPO_TOKEN")}',
                 'Accept': 'application/vnd.github.v3.raw'
             }
             response = requests.get(raw_url, headers=headers)
