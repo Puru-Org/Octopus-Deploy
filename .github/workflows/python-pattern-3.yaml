@@ -37,6 +37,7 @@ jobs:
           repository: Puru-Org/GlobalVariable
           path: Octopus-GlobalVariable
           ref: main
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Run Python script
         env:
