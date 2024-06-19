@@ -1,0 +1,103 @@
+# This workflow is mainly used to clone two repos and clone the global variables to project variables
+#
+name: Export Global Variables to Project JSON Pattern-3
+
+on:
+  workflow_call:
+    inputs:
+      global_ref_json:
+        type: string
+        required: true
+        description: 'Path to the JSON file containing references to global variables'
+      project_variable_json:
+        type: string
+        required: true
+        description: 'Path to the destination JSON file'
+    secrets:
+      GH_TOKEN:
+        required: true
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest
+    container:
+        image: python:3.10
+      #   credentials:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+            path: Octopus-CD
+      - name: Checkout Octopus-Deploy repository
+        uses: actions/checkout@v2
+        with:
+          repository: Puru-Org/GlobalVariable
+          path: Octopus-GlobalVariable
+
+      - name: Run Python script
+        env:
+          GLOBAL_REF_JSON: ${{ inputs.global_ref_json }}
+          PROJECT_VARIABLE_JSON: ${{ inputs.project_variable_json }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          python3 - <<'EOF'
+          import json
+          import os
+          
+          def fetch_json_from_file(file_path):
+              with open(file_path, 'r') as f:
+                  return json.load(f)
+          
+          def extract_and_add_variable(source_json_path, project_variable_json, variable_names):
+              source_data = fetch_json_from_file(source_json_path)
+          
+              with open(project_variable_json, 'r') as f:
+                  dest_data = json.load(f)
+          
+              dest_environment_list = dest_data["ScopeValues"]["Environments"]
+              dest_environment_dict = {env["Id"]: env["Name"] for env in dest_environment_list}
+          
+              for variable_name in variable_names:
+                  existing_variables = [variable for variable in dest_data["Variables"] if variable["Name"] == variable_name]
+                  if existing_variables:
+                      print(f"Variable '{variable_name}' already exists in the destination '{project_variable_json}' file.")
+                  else:
+                      print(f"Adding the '{variable_name}' variable property block to the destination '{project_variable_json}' file")
+                      extracted_data = [variable for variable in source_data if variable.get("Name") == variable_name]
+                      dest_data["Variables"].extend(extracted_data)
+          
+              with open(project_variable_json, 'w') as f:
+                  json.dump(dest_data, f, indent=2)
+          
+          # Read source data from environment variable
+          global_ref_json_path = os.getenv("GLOBAL_REF_JSON")
+          with open(global_ref_json_path, 'r') as f:
+              source_data = json.load(f)
+          
+          # Process each source data entry
+          for data_entry in source_data:
+              source_json_path = data_entry["global_variable_path"]
+              variable_names = data_entry["variable_names"]
+              project_variable_json = os.getenv("PROJECT_VARIABLE_JSON")  # Assuming same destination JSON file for all sources
+          
+              # Call function to extract and add variables to destination JSON
+              if data_entry.get("copy_all"):
+                  all_variables = fetch_json_from_file(source_json_path)
+                  variable_names.extend(variable["Name"] for variable in all_variables)
+          
+              extract_and_add_variable(source_json_path.strip(), project_variable_json, variable_names)
+          EOF
+      - name: Get content of ${{ inputs.project_variable_json }}
+        run: |
+          cat ${{ inputs.project_variable_json }}
+      - name: Clear Workspace
+        if: always()
+        run: |
+          ls -la .
+          tree
+          rm -rf ./*
+          echo "Workspace has been cleared"
+          ls . 
