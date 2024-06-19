@@ -97,7 +97,7 @@ jobs:
           cat ${{ inputs.project_variable_json }}
       - name: Install Tree
         run: | 
-          sudo apt-get install tree -y
+          apt-get install tree -y
       - name: Clear Workspace
         if: always()
         run: |
