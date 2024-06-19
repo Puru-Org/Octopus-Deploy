@@ -36,6 +36,7 @@ jobs:
         with:
           repository: Puru-Org/GlobalVariable
           path: Octopus-GlobalVariable
+          ref: main
 
       - name: Run Python script
         env:
@@ -93,6 +94,9 @@ jobs:
       - name: Get content of ${{ inputs.project_variable_json }}
         run: |
           cat ${{ inputs.project_variable_json }}
+      - name: Install Tree
+        run: | 
+          apk add --no-cache tree   
       - name: Clear Workspace
         if: always()
         run: |
