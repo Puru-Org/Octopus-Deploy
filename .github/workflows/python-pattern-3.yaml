@@ -65,22 +65,29 @@ jobs:
                 dest_environment_dict = {env["Id"]: env["Name"] for env in dest_environment_list}
 
                 for variable_name in variable_names:
+                    # Extract the variable from the source data
+                    source_variable = next((variable for variable in source_data if variable.get("Name") == variable_name), None)
+                    
+                    if not source_variable:
+                        continue
+
                     # Check if the variable already exists in the destination JSON
                     existing_variables = [variable for variable in dest_data["Variables"] if variable["Name"] == variable_name]
+                    
                     if existing_variables:
                         existing_variable = existing_variables[0]
-                        source_variable = next((variable for variable in source_data if variable.get("Name") == variable_name), None)
-                        if source_variable:
-                            if existing_variable == source_variable:
-                                print(f"Variable '{variable_name}' exists with matching value: {existing_variable}")
+                        
+                        if existing_variable == source_variable:
+                            print(f"Variable '{variable_name}' exists with matching value: {existing_variable['Value']}")
+                        else:
+                            print(f"Variable '{variable_name}' exists with different value. Appending new value.")
+                            if isinstance(existing_variable['Value'], list):
+                                existing_variable['Value'].append(source_variable['Value'])
                             else:
-                                print(f"Variable '{variable_name}' exists with different value. Updating value.")
-                                existing_variable.update(source_variable)
+                                existing_variable['Value'] = [existing_variable['Value'], source_variable['Value']]
                     else:
                         print(f"Adding the '{variable_name}' variable property block to the destination '{project_variable_json}' file")
-                        # Extract the variable from the source data
-                        extracted_data = [variable for variable in source_data if variable.get("Name") == variable_name]
-                        dest_data["Variables"].extend(extracted_data)
+                        dest_data["Variables"].append(source_variable)
 
                 # Write the updated destination data back to the file
                 with open(project_variable_json, 'w') as f:
