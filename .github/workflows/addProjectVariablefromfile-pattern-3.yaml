@@ -39,7 +39,7 @@ jobs:
 
     - name: List files for debugging
       run: |
-        ls -la ./Octopus-CD/Octopus
+        ls -LiteralPath ./Octopus-CD/Octopus
     - name: Powershell script to add project variables
       env: 
         OCTOPUS_API_NAME: ${{ inputs.octopusApiName }}
