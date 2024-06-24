@@ -130,10 +130,10 @@ jobs:
         apt-get install tree -y
         ls -la .
         tree
-    # - name: Clear Workspace
-    #   if: always()
-    #   run: |
-    #     ls -la .
-    #     rm -rf ./*
-    #     echo "Workspace has been cleared"
-    #     ls .    
+    - name: Clear Workspace
+      if: always()
+      run: |
+        ls -la .
+        rm -rf ./*
+        echo "Workspace has been cleared"
+        ls .    
