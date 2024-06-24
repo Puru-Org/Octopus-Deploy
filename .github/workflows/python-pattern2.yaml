@@ -48,20 +48,21 @@ jobs:
         def fetch_json_from_raw_url(raw_url):
             headers = {
                 'Authorization': f'token {os.getenv("GH_TOKEN")}',
-                'Accept': 'application/vnd.github.v3.raw'
+                'Accept': 'application/vnd.github.v3+json',
+                'X-GitHub-Api-Version': '2022-11-28' 
             }
             try:
-              response = requests.get(raw_url, headers=headers)
-              response.raise_for_status()
-              content = response.json()
-              if 'content' in content:
-                return json.loads(base64.b64decode(content['content']).decode('utf-8'))
-              else:
-                print(f"No content found at URL '{raw_url}'")
-                return None
+                response = requests.get(raw_url, headers=headers)
+                response.raise_for_status()
+                content = response.json()
+                if 'content' in content:
+                  return json.loads(base64.b64decode(content['content']).decode('utf-8'))
+                else:
+                  print(f"No content found at URL '{raw_url}'")
+                  return None
             except requests.RequestException as e:
-              print(f"Error fetching JSON from API URL '{raw_url}': {e}")
-              return None
+                print(f"Error fetching JSON from API URL '{raw_url}': {e}")
+                return None
             # response = requests.get(raw_url, headers=headers)
             # if response.status_code != 200:
             #     raise Exception(f"Error fetching JSON from URL '{raw_url}': {response.status_code} {response.reason}")
