@@ -13,10 +13,10 @@ on:
         type: string
         required: true
         #default: "https://deploy1.octopus.app"
-      variableFilePath:
-        type: string
-        required: true
-        description: Source variable file path
+    #   variableFilePath:
+    #     type: string
+    #     required: true
+    #     description: Source variable file path
         #default: "**/variable-2.json"
     #   octopusApiName:
     #     type: string 
