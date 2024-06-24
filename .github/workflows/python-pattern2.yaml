@@ -27,6 +27,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with: 
+        path: Octopus-CD
 
     - name: Set environment variables
       run: |
@@ -113,7 +115,7 @@ jobs:
         cat ${{ inputs.project_variable_json }}
     - name: List all files & Directories
       run: |
-        ls -la ${{ github.workspace }}
+        ls -la ./Octopus-CD
     # - name: Clear Workspace
     #   if: always()
     #   run: |
