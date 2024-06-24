@@ -31,15 +31,26 @@ jobs:
     steps:
     # - name: Checkout code
     #   uses: actions/checkout@v2
+    - name: Download project variable JSON
+      uses: actions/download-artifact@v2
+      with:
+        name: project-variable-json
+        path: ./Octopus-CD/Octopus
+
+    - name: List files for debugging
+      run: |
+        ls -la ./Octopus-CD/Octopus
     - name: Powershell script to add project variables
       env: 
         OCTOPUS_API_NAME: ${{ inputs.octopusApiName }}
+        variableFilePath: "./Octopus-CD/Octopus/variable-2.json"
       run: |
         # Define variables
         $octopusURL = "${{ github.event.inputs.octopus_url }}"
         $apiKey = "${{ secrets.OCTOPUS_API_KEY }}"
         #$apiKey = "${{ secrets[inputs.octopusApiName] }}"
-        $sourceVariableFile = "${{ inputs.variableFilePath }}"
+        #$sourceVariableFile = "${{ inputs.variableFilePath }}"
+        $sourceVariableFile = $env:variableFilePath
         $projectName = "${{ inputs.ProjectName }}"
         $spaceName = "Default"
         $header = @{ 

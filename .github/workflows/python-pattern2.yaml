@@ -114,9 +114,16 @@ jobs:
     - name: Get content of ${{ inputs.project_variable_json }}
       run: |
         cat ${{ inputs.project_variable_json }}
-    - name: Set output
-      id: set_output
-      run: echo "::set-output name=project_variable_json::${{ inputs.project_variable_json }}"
+    - name: Upload project variable JSON
+      uses: actions/upload-artifact@v2
+      with:
+        name: project-variable-json
+        path: ${{ inputs.project_variable_json }}
+    # - name: Set output
+    #   id: set_output
+    #   run: echo "::set-output name=project_variable_json::${{ inputs.project_variable_json }}"
+    # - name: Save project variable path to environment file
+    #   run: echo "PROJECT_VARIABLE_PATH=${{ inputs.project_variable_json }}" >> project-variable.json
     - name: List all files & Directories
       run: |
         apt-get update -y
