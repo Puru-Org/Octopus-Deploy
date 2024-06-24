@@ -23,7 +23,8 @@ jobs:
     #   credentials:
     #     username: ${{ secrets.DOCKER_USERNAME }}
     #     password: ${{ secrets.DOCKER_PASSWORD }}
-
+    outputs:
+      project_variable_json: ${{ steps.set_output.outputs.project_variable_json }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -113,9 +114,15 @@ jobs:
     - name: Get content of ${{ inputs.project_variable_json }}
       run: |
         cat ${{ inputs.project_variable_json }}
+    - name: Set output
+      id: set_output
+      run: echo "::set-output name=project_variable_json::${{ inputs.project_variable_json }}"
     - name: List all files & Directories
       run: |
-        ls -la ./Octopus-CD
+        apt-get update -y
+        apt-get install tree -y
+        ls -la .
+        tree
     # - name: Clear Workspace
     #   if: always()
     #   run: |
