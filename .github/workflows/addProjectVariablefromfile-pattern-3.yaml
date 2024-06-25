@@ -34,7 +34,7 @@ jobs:
     - name: Download project variable JSON
       uses: actions/download-artifact@v2
       with:
-        name: project-variable-json
+        name: project-variable-json/final-project-variable-${{ github.run_id }}.json
         path: ./Octopus-CD/Octopus
 
     - name: List files for debugging

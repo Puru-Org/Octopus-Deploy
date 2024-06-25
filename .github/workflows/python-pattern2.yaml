@@ -117,7 +117,7 @@ jobs:
     - name: Upload project variable JSON
       uses: actions/upload-artifact@v2
       with:
-        name: project-variable-json
+        name: project-variable-json/final-project-variable-${{ github.run_id }}.json
         path: ${{ inputs.project_variable_json }}
     # - name: Set output
     #   id: set_output
