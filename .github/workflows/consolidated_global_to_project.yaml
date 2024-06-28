@@ -1,0 +1,144 @@
+name: Export Global Variables to Project JSON - 2
+on:
+  workflow_call:
+    inputs: 
+      global_ref_json: 
+        type: string
+        required: true
+        description: 'Path to the JSON file containing source data'
+      project_variable_json:
+        type: string
+        required: true
+        description: 'Path to the JSON file containing project variables'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+  
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with: 
+        path: Octopus-CD
+
+    - name: Set environment variables
+      run: |
+        echo "GLOBAL_REF_JSON=${{ inputs.global_ref_json }}" >> $GITHUB_ENV
+        echo "PROJECT_VARIABLE_JSON=${{ inputs.project_variable_json }}" >> $GITHUB_ENV
+    - name: install JQ
+      uses: dcarbone/install-jq-action@v2
+      with:
+        version: '1.7'
+        force: false
+    - name: Consolidate global variables to project
+      env:
+        GLOBAL_REF_JSON: ${{ inputs.global_ref_json }}
+        PROJECT_VARIABLE_JSON: ${{ inputs.project_variable_json }}
+        REPO_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: | 
+        #!/bin/bash
+
+        # Pass github token
+        GITHUB_TOKEN="$env:REPO_TOKEN"
+
+        # Path to the JSON configuration file
+        CONFIG_FILE="$env:GLOBAL_REF_JSON"
+
+        # Define file paths
+        PROJECT_VARIABLES="$env:PROJECT_VARIABLE_JSON"
+        TEMP_FILE="temp.json"
+
+        # Check if jq is installed
+        if ! command -v jq &> /dev/null
+        then
+            echo "jq could not be found. Please install jq to use this script."
+            exit 1
+        fi
+
+        # Check if GITHUB_TOKEN is set
+        if [ -z "$GITHUB_TOKEN" ]; then
+            echo "GITHUB_TOKEN is not set. Please set it to your GitHub personal access token."
+            exit 1
+        fi
+
+        # Function to fetch and decode JSON content from GitHub
+        fetch_github_content() {
+        local url="$1"
+        curl -H "Authorization: token $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3.raw" -s "$url"
+        }
+
+        # Validate PROJECT_VARIABLES
+        if ! jq empty "$PROJECT_VARIABLES" 2>/dev/null; then
+            echo "Invalid JSON in $PROJECT_VARIABLES"
+            exit 1
+        fi
+
+        # Read the configuration file
+        config_entries=$(jq -c '.[]' "$CONFIG_FILE")
+
+        # Function to check if a variable exists in PROJECT_VARIABLES.json
+        variable_exists() {
+        local var_name="$1"
+        local var_scope="$2"
+        jq -e --arg name "$var_name" --argjson scope "$var_scope" '
+            .Variables[] | select(.Name == $name and .Scope == $scope)
+        ' "$PROJECT_VARIABLES" > /dev/null
+        }
+
+        # Process each entry in the configuration file
+        for entry in $config_entries; do
+        url=$(echo "$entry" | jq -r '.global_variable_json_url')
+        variable_names=$(echo "$entry" | jq -r '.variable_names[]? // empty')
+        copy_all=$(echo "$entry" | jq -r '.copy_all // false')
+        
+        # Fetch the content from GitHub
+        content=$(fetch_github_content "$url")
+        if ! echo "$content" | jq empty 2>/dev/null; then
+            echo "Invalid JSON in $url"
+            exit 1
+        fi
+
+        # Extract variables based on the configuration
+        if [ "$copy_all" = true ]; then
+            variables_to_add=$(echo "$content" | jq -c '.[]')
+        else
+            if [ -n "$variable_names" ]; then
+            variables_to_add=$(echo "$content" | jq -c --argjson names "$(echo "$variable_names" | jq -c 'split(" ")')" '.[] | select(.Name as $name | $names | index($name))')
+            else
+            echo "No variable names specified or copy_all not set to true for $url"
+            continue
+            fi
+        fi
+
+        # Add missing variables to PROJECT_VARIABLES
+        for app_var in $variables_to_add; do
+            var_name=$(echo "$app_var" | jq -r '.Name')
+            var_scope=$(echo "$app_var" | jq '.Scope')
+            var_value=$(echo "$app_var" | jq '.Value')
+            
+            if variable_exists "$var_name" "$var_scope"; then
+            echo "Variable already exists: $var_name with scope: $var_scope"
+            else 
+            echo "Adding missing variable: $var_name with value $var_value and scope: $var_scope"
+            jq --argjson new_var "$app_var" '.Variables += [$new_var]' "$PROJECT_VARIABLES" > "$TEMP_FILE" && mv "$TEMP_FILE" "$PROJECT_VARIABLES"
+            fi
+        done
+        done
+
+        echo "Validation and update complete."
+    - name: Upload project variable JSON
+      uses: actions/upload-artifact@v4
+      with:
+        name: final-project-variable-${{ github.run_id }}
+        path: ${{ inputs.project_variable_json }}
+    - name: Clear Workspace
+      if: always()
+      run: |
+        ls -la .
+        rm -rf ./*
+        echo "Workspace has been cleared"
+        ls .
