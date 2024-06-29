@@ -32,7 +32,7 @@ jobs:
     # - name: Checkout code
     #   uses: actions/checkout@v2
     - name: Download project variable JSON
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: final-project-variable-${{ github.run_id }}
         path: octopus-final
