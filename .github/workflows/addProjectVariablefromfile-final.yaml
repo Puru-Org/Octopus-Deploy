@@ -13,10 +13,10 @@ on:
         type: string
         required: true
         #default: "https://deploy1.octopus.app"
-    #   variableFilePath:
-    #     type: string
-    #     required: true
-    #     description: Source variable file path
+      variableFileName:
+        type: string
+        required: true
+        description: Project variable file name
         #default: "**/variable-2.json"
     #   octopusApiName:
     #     type: string 
@@ -138,7 +138,8 @@ jobs:
         $projectVariables.Variables = @()
         
         # Load source variable file
-        $sourceVariables = Get-Content -Path $sourceVariableFile | ConvertFrom-Json
+        $sourceVariables = [IO.File]::ReadAllText($sourceVariableFile) | ConvertFrom-Json
+        #$sourceVariables = Get-Content -Path $sourceVariableFile | ConvertFrom-Json
         if (-not $sourceVariables) {
             Write-Error "Failed to load source variables from file '$sourceVariableFile'."
             exit 1
