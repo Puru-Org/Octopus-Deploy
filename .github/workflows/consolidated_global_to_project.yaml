@@ -133,7 +133,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: final-project-variable-${{ github.run_id }}
-        path: Octopus-CD/${{ inputs.project_variable_json }}
+        path: ${{ inputs.project_variable_json }}
+        overwrite: true
+        if-no-files-found: error
     - name: Clear Workspace
       if: always()
       run: |

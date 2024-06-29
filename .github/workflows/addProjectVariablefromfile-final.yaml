@@ -35,15 +35,15 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: final-project-variable-${{ github.run_id }}
-        path: ./Octopus-CD/Octopus
+        path: octopus-final
 
     - name: List files for debugging
       run: |
-        ls -LiteralPath ./Octopus-CD/Octopus
+        ls -LiteralPath ./octopus-final
     - name: Powershell script to add project variables
       env: 
         OCTOPUS_API_NAME: ${{ inputs.octopusApiName }}
-        variableFilePath: "./Octopus-CD/Octopus/variable-2.json      "
+        variableFilePath: "octopus-final/variable-2.json      "
       run: |
         # Define variables
         $octopusURL = "${{ github.event.inputs.octopus_url }}"
