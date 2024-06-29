@@ -30,10 +30,9 @@ jobs:
         echo "GLOBAL_REF_JSON=${{ inputs.global_ref_json }}" >> $GITHUB_ENV
         echo "PROJECT_VARIABLE_JSON=${{ inputs.project_variable_json }}" >> $GITHUB_ENV
     - name: install JQ
-      uses: dcarbone/install-jq-action@v2
-      with:
-        version: '1.7'
-        force: false
+      run: |
+        sudo apt-get update > /dev/null
+        sudo apt-get install jq > /dev/null 
     - name: Consolidate global variables to project
       env:
         GLOBAL_REF_JSON: ${{ inputs.global_ref_json }}
@@ -43,13 +42,13 @@ jobs:
         #!/bin/bash
 
         # Pass github token
-        GITHUB_TOKEN="$env:REPO_TOKEN"
+        GITHUB_TOKEN="${{ secrets.GH_TOKEN }}"
 
         # Path to the JSON configuration file
-        CONFIG_FILE="$env:GLOBAL_REF_JSON"
+        CONFIG_FILE="${{ inputs.global_ref_json }}"
 
         # Define file paths
-        PROJECT_VARIABLES="$env:PROJECT_VARIABLE_JSON"
+        PROJECT_VARIABLES="${{ inputs.project_variable_json }}"
         TEMP_FILE="temp.json"
 
         # Check if jq is installed
