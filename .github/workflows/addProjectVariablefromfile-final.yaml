@@ -13,10 +13,10 @@ on:
         type: string
         required: true
         #default: "https://deploy1.octopus.app"
-      variableFilePath:
-        type: string
-        required: true
-        description: Source variable file path
+    #   variableFilePath:
+    #     type: string
+    #     required: true
+    #     description: Source variable file path
         #default: "**/variable-2.json"
     #   octopusApiName:
     #     type: string 
@@ -35,22 +35,23 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: final-project-variable-${{ github.run_id }}
-        path: octopus-final
+        path: Octopus-final
 
     - name: List files for debugging
       run: |
-        ls -LiteralPath ./octopus-final
+        ls -LiteralPath ./Octopus-final
+        tree
     - name: Powershell script to add project variables
       env: 
         OCTOPUS_API_NAME: ${{ inputs.octopusApiName }}
-        variableFilePath: "octopus-final/variable-2.json      "
+        variableFilePath: "octopus-final/demo-variables.json"
       run: |
         # Define variables
         $octopusURL = "${{ github.event.inputs.octopus_url }}"
         $apiKey = "${{ secrets.OCTOPUS_API_KEY }}"
-        #$apiKey = "${{ secrets[inputs.octopusApiName] }}"
-        $sourceVariableFile = "octopus-final/${{ inputs.variableFilePath }}"
-        #$sourceVariableFile = $env:variableFilePath
+        ####$apiKey = "${{ secrets[inputs.octopusApiName] }}"
+        ####$sourceVariableFile = "${{ inputs.variableFilePath }}"
+        $sourceVariableFile = $env:variableFilePath
         $projectName = "${{ inputs.ProjectName }}"
         $spaceName = "Default"
         $header = @{ 
