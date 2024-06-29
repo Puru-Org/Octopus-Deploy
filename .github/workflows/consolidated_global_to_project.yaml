@@ -10,10 +10,10 @@ on:
         type: string
         required: true
         description: 'Path to the JSON file containing project variables'
-    secrets:
-      GH_TOKEN:
-        required: true
-        description: ''
+    # secrets:
+    #   GH_TOKEN:
+    #     required: true
+    #     description: ''
 
 jobs:
   build:
@@ -134,11 +134,11 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: final-project-variable-${{ github.run_id }}
-        path: ${{ inputs.project_variable_json }}
+        path: Octopus-CD/${{ inputs.project_variable_json }}
     - name: Clear Workspace
       if: always()
       run: |
-        ls -la .
-        rm -rf ./*
-        echo "Workspace has been cleared"
-        ls .
+        ls -la
+        rm -rf ${{ inputs.project_variable_json }}
+        echo "File has been deleted"
+        tree
